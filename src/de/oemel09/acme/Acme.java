@@ -40,31 +40,49 @@ public class Acme {
 	}
 
 	private int getWeekSalary(WorkDay workDay) {
-		if(workDay.getStart() <= 900 && workDay.getEnd() <= 900) {
-			return 25 * ((workDay.getEnd() - workDay.getStart()) / 100);
+		int amount = 0;
+		amount += Math.max(0, 900 - workDay.getStart()) / 100 * 25;
+		amount -= Math.max(0, 900 - workDay.getEnd()) / 100 * 25;
+		if(workDay.getStart() > 900) {
+			amount += Math.max(0, 1800 - workDay.getStart()) / 100 * 15;
+			amount -= Math.max(0, 1800 - workDay.getEnd()) / 100 * 15;
+		} else {
+			if(workDay.getEnd() > 900) {
+				amount += Math.min(900, workDay.getEnd() - 900) / 100 * 15;
+			}
 		}
-		if(workDay.getStart() > 900 && workDay.getStart() <= 1800
-				&& workDay.getEnd() > 900 && workDay.getEnd() <= 1800) {
-			return 15 * ((workDay.getEnd() - workDay.getStart()) / 100);
+		if(workDay.getStart() > 1800) {
+			amount += Math.max(0, 2359 - workDay.getStart()) / 100 * 20;
+			amount -= Math.max(0, 2359 - workDay.getEnd()) / 100 * 20;
+		} else {
+			if(workDay.getEnd() > 1800) {
+				amount += Math.min(600, workDay.getEnd() - 1800) / 100 * 20;
+			}
 		}
-		if(workDay.getStart() > 1800 && workDay.getEnd() <= 2359) {
-			return 20 * ((workDay.getEnd() - workDay.getStart()) / 100);
-		}
-		return 0;
+		return amount;
 	}
 
 	private int getWeekendSalary(WorkDay workDay) {
-		if(workDay.getStart() <= 900 && workDay.getEnd() <= 900) {
-			return 30 * ((workDay.getEnd() - workDay.getStart()) / 100);
+		int amount = 0;
+		amount += Math.max(0, 900 - workDay.getStart()) / 100 * 30;
+		amount -= Math.max(0, 900 - workDay.getEnd()) / 100 * 30;
+		if(workDay.getStart() > 900) {
+			amount += Math.max(0, 1800 - workDay.getStart()) / 100 * 20;
+			amount -= Math.max(0, 1800 - workDay.getEnd()) / 100 * 20;
+		} else {
+			if(workDay.getEnd() > 900) {
+				amount += Math.min(900, workDay.getEnd() - 900) / 100 * 20;
+			}
 		}
-		if(workDay.getStart() > 900 && workDay.getStart() <= 1800
-				&& workDay.getEnd() > 900 && workDay.getEnd() <= 1800) {
-			return 20 * ((workDay.getEnd() - workDay.getStart()) / 100);
+		if(workDay.getStart() > 1800) {
+			amount += Math.max(0, 2359 - workDay.getStart()) / 100 * 25;
+			amount -= Math.max(0, 2359 - workDay.getEnd()) / 100 * 25;
+		} else {
+			if(workDay.getEnd() > 1800) {
+				amount += Math.min(600, workDay.getEnd() - 1800) / 100 * 25;
+			}
 		}
-		if(workDay.getStart() > 1800 && workDay.getEnd() <= 2359) {
-			return 25 * ((workDay.getEnd() - workDay.getStart()) / 100);
-		}
-		return 0;
+		return amount;
 	}
 
 	private boolean isWeekend(String day) {
