@@ -22,8 +22,4 @@ public class WorkDay {
 	public int getEnd() {
 		return end;
 	}
-	
-	public int getAmountOfHours() {
-		return (end - start) / 100;
-	}
 }
