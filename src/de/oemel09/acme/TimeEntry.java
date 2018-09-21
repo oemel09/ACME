@@ -20,7 +20,7 @@ public class TimeEntry {
 		if (entry.matches(entryRegex)) {
 			this.name = entry.split("=")[0];
 
-			// create pattern to get
+			// create pattern to get each group
 			String workDayRegex = "(MO|TU|WE|TH|FR|SA|SU)([0-1][0-9]|2[0-3]):([0-5][0-9])-([0-1][0-9]|2[0-3]):([0-5][0-9])";
 			Pattern workDayPattern = Pattern.compile(workDayRegex);
 			Matcher matcher = workDayPattern.matcher(entry);
