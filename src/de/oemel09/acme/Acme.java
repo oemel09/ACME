@@ -4,10 +4,39 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Acme {
 
+	private static final String[] dayAbbreviation = { "MO", "TU", "WE", "TH", "FR", "SA", "SU" };
+	
+	private static final int[] weekdayRange = { 0, 900, 1800, 2400 };
+	private static final int[] weekendRange = { 0, 900, 1800, 2400 };
+	private static final int[][] rangeMatrix = {
+			weekdayRange, 
+			weekdayRange,
+			weekdayRange,
+			weekdayRange,
+			weekdayRange,
+			weekendRange,
+			weekendRange,
+	};
+	
+	private static final int[] weekdayRate = { 25, 15, 20 };
+	private static final int[] weekendRate = { 30, 20, 25 };
+	private static final int[][] rateMatrix = { 
+			weekdayRate, 
+			weekdayRate, 
+			weekdayRate, 
+			weekdayRate, 
+			weekdayRate, 
+			weekendRate,
+			weekendRate,		
+	};
+
 	private ArrayList<TimeEntry> timeEntries;
+	private HashMap<String, int[]> ranges;
+	private HashMap<String, int[]> rates;
 
 	public static void main(String[] args) throws IOException {
 		Acme acme = new Acme("input.txt");
@@ -24,69 +53,64 @@ public class Acme {
 			timeEntries.add(new TimeEntry(row));
 		}
 		br.close();
+		
+		createRanges();
+		createRates();
 	}
 
+	private void createRanges() {
+		ranges = new HashMap<>();
+		for(int i = 0; i < 7; i++) {
+			ranges.put(dayAbbreviation[i], rangeMatrix[i]);
+		}
+	}
+	
+	private void createRates() {
+		rates = new HashMap<>();
+		for(int i = 0; i < 7; i++) {
+			rates.put(dayAbbreviation[i], rateMatrix[i]);
+		}
+	}
+	
 	private void calculateSalary(TimeEntry timeEntry) {
 		int salary = 0;
-		for(WorkDay wd : timeEntry.getDays()) {
-			salary+=getSalary(wd);
+		for (WorkDay wd : timeEntry.getDays()) {
+			salary += getSalary(wd);
 		}
 		String output = String.format("The amount to pay %s is: %d USD", timeEntry.getName(), salary);
 		System.out.println(output);
 	}
 
 	private int getSalary(WorkDay workDay) {
-		return (isWeekend(workDay.getDay())) ? getWeekendSalary(workDay) : getWeekSalary(workDay);
-	}
-
-	private int getWeekSalary(WorkDay workDay) {
 		int amount = 0;
-		amount += Math.max(0, 900 - workDay.getStart()) / 100 * 25;
-		amount -= Math.max(0, 900 - workDay.getEnd()) / 100 * 25;
-		if(workDay.getStart() > 900) {
-			amount += Math.max(0, 1800 - workDay.getStart()) / 100 * 15;
-			amount -= Math.max(0, 1800 - workDay.getEnd()) / 100 * 15;
-		} else {
-			if(workDay.getEnd() > 900) {
-				amount += Math.min(900, workDay.getEnd() - 900) / 100 * 15;
-			}
-		}
-		if(workDay.getStart() > 1800) {
-			amount += Math.max(0, 2359 - workDay.getStart()) / 100 * 20;
-			amount -= Math.max(0, 2359 - workDay.getEnd()) / 100 * 20;
-		} else {
-			if(workDay.getEnd() > 1800) {
-				amount += Math.min(600, workDay.getEnd() - 1800) / 100 * 20;
-			}
-		}
-		return amount;
-	}
+		String day = workDay.getDay();
+		int start = workDay.getStart();
+		int end = workDay.getEnd();
+		
+		// first range
+		amount += Math.max(0, ranges.get(day)[1] - start) / 100 * rates.get(day)[0];
+		amount -= Math.max(0, ranges.get(day)[1] - end) / 100 * rates.get(day)[0];
 
-	private int getWeekendSalary(WorkDay workDay) {
-		int amount = 0;
-		amount += Math.max(0, 900 - workDay.getStart()) / 100 * 30;
-		amount -= Math.max(0, 900 - workDay.getEnd()) / 100 * 30;
-		if(workDay.getStart() > 900) {
-			amount += Math.max(0, 1800 - workDay.getStart()) / 100 * 20;
-			amount -= Math.max(0, 1800 - workDay.getEnd()) / 100 * 20;
-		} else {
-			if(workDay.getEnd() > 900) {
-				amount += Math.min(900, workDay.getEnd() - 900) / 100 * 20;
-			}
+		// first we assume the employee worked the whole second range
+		int interval = ranges.get(day)[2] - ranges.get(day)[1];
+		amount += (interval) / 100 * rates.get(day)[1];
+		
+		// then we subtract the hours we assumed too much
+		if(end < ranges.get(day)[2]) {
+			// when employee worked only in first or in the first and second range 
+			amount -= Math.max(0, start - ranges.get(day)[1]) / 100 * rates.get(day)[1];
+			amount -= Math.min(interval, ranges.get(day)[2] - end) / 100 * rates.get(day)[1];	
+		} else if(start > ranges.get(day)[1]) {
+			// when employee worked in the second and third or only in the third range
+			amount -= Math.min(interval, start - ranges.get(day)[1]) / 100 * rates.get(day)[1];
+			amount -= Math.max(0, ranges.get(day)[2] - end) / 100 * rates.get(day)[1];	
 		}
-		if(workDay.getStart() > 1800) {
-			amount += Math.max(0, 2359 - workDay.getStart()) / 100 * 25;
-			amount -= Math.max(0, 2359 - workDay.getEnd()) / 100 * 25;
-		} else {
-			if(workDay.getEnd() > 1800) {
-				amount += Math.min(600, workDay.getEnd() - 1800) / 100 * 25;
-			}
-		}
-		return amount;
-	}
 
-	private boolean isWeekend(String day) {
-		return (day.equals("SA") || day.equals("SU"));
+		// third range
+		amount += Math.max(0, end - ranges.get(day)[2]) / 100 * rates.get(day)[2];
+		amount -= Math.max(0, start - ranges.get(day)[2]) / 100 * rates.get(day)[2];
+
+		return amount;
 	}
 
 	public ArrayList<TimeEntry> getTimeEntries() {
