@@ -75,13 +75,13 @@ public class Acme {
     private void calculateSalary(TimeEntry timeEntry) {
         int salary = 0;
         for (WorkDay wd : timeEntry.getDays()) {
-            salary += getSalary(wd);
+            salary += getDailySalary(wd);
         }
         String output = String.format("The amount to pay %s is: %d USD", timeEntry.getName(), salary);
         System.out.println(output);
     }
 
-    private int getSalary(WorkDay workDay) {
+    private int getDailySalary(WorkDay workDay) {
         int amount = 0;
         String day = workDay.getDay();
         int start = workDay.getStart();
